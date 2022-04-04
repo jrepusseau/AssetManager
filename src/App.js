@@ -99,8 +99,11 @@ export default class App extends React.Component
             transactionIndxLocked: 0,
             lovelaceLocked: 3000000,
             manualFee: 900000,
+            isDisabled: true
 
         }
+
+        this.myRef = React.createRef(); //add ref
 
         /**
          * When the wallet is connect it returns the connector which is
@@ -634,9 +637,13 @@ export default class App extends React.Component
 
     buildSendTokenTransaction = async () => {
 
-        let utf8Encode = new TextEncoder();
-        utf8Encode.encode("abc");
+        
 
+        let e = document.getElementById("ProdName"),
+         hexvalue = e.value,
+         hexPolicyName = hexvalue.split('.')
+
+        
         const map = MetadataMap.new();
         map.insert(
             TransactionMetadatum.new_text("receiver_id"),
@@ -660,19 +667,20 @@ export default class App extends React.Component
            TransactionMetadatum.new_text("tags"),
            TransactionMetadatum.new_list(tags),
         ); */
+
         const metadatum = TransactionMetadatum.new_map(map);
         
        const metadatum2 = GeneralTransactionMetadata.new()
        metadatum2.insert(
             BigNum.from_str("264"),
-           TransactionMetadatum.new_text("https://github.com/Emurgo/ 304adec86c7764e6540aa64f02a6af02")
-
+           TransactionMetadatum.new_text(document.getElementById("metadata").value)
             );
 
         //TransactionMetadatum.new_map(map);
 
         const txBuilder = await this.initTransactionBuilder();
-        const shelleyOutputAddress = Address.from_bech32(this.state.addressBech32SendADA);
+       // const shelleyOutputAddress = Address.from_bech32(this.state.addressBech32SendADA);
+       const shelleyOutputAddress = Address.from_bech32(this.addressMatch(document.getElementById("sendAddress").value));
         const shelleyChangeAddress = Address.from_bech32(this.state.changeAddress);
 
         let txOutputBuilder = TransactionOutputBuilder.new();
@@ -682,11 +690,13 @@ export default class App extends React.Component
         let multiAsset = MultiAsset.new();
         let assets = Assets.new()
         assets.insert(
-            AssetName.new(Buffer.from(this.state.assetNameHex, "hex")), // Asset Name
+           // AssetName.new(Buffer.from(this.state.assetNameHex, "hex")), // Asset Name
+           AssetName.new(Buffer.from(hexPolicyName[1], "hex")),
             BigNum.from_str(this.state.assetAmountToSend.toString()) // How much to send
         );
         multiAsset.insert(
-            ScriptHash.from_bytes(Buffer.from(this.state.assetPolicyIdHex, "hex")), // PolicyID
+            ScriptHash.from_bytes(Buffer.from(hexPolicyName[0], "hex")),
+          //  ScriptHash.from_bytes(Buffer.from(this.state.assetPolicyIdHex, "hex")), // PolicyID
             assets
         );
 
@@ -1283,10 +1293,11 @@ return (xtpr.responseText)
 
 }
 
-addressMatch(adr)
+stakeAddressMatch(adr)
 {
     let test = adr;
     var arr = { "stake1uxh66rrhqw6xnmgzzwecfay88qj82dldkqnxzv24vsd2jlcntzenm":"@Farmer", "stake1uxkfxnq76mdljmpjsca8uf4cvys263vxnjdgrgecyl0r85cphcncy": "@Fund", "stake1u8rff8gxmd77vemd7gdlg3pp69vgmcnctmfwh2y856w38ushuc9q3": "@Manufacturer" }; 
+
     /*for (let value of Object.keys(arr)) {
      if (adr == value)
        test = Object.values(arr); 
@@ -1295,10 +1306,99 @@ addressMatch(adr)
     for (let i = 0; i < Object.keys(arr).length; i++) {
          if (adr == Object.keys(arr)[i])
         test = Object.values(arr)[i]; 
+        if (adr == Object.values(arr)[i])
+        test = Object.keys(arr)[i]; 
     }
     return test; 
 }
 
+addressMatch(adr)
+{
+    alert(adr);
+    let test = adr;
+    var arr = { "addr1qyt3ztevekxhjp08xhhvve6cjf6jsch9ra0530jqdds9mp4045x8wqa5d8ksyyansn6gwwpyw5m7mvpxvyc42eq649lsps808l":"@Farmer", "addr1q86u56e5qygtpu00j9t9g605y07syv69vdpfn55vrv3t2p4vjdxpa4kml9kr9p360cntscfq44zcd8y6sx3nsf77x0fshgnwtg": "@Fund", "addr1qxv0jmtjgc54hyuaanlkhx5tdej0yfzzp0tmgp0kz4sluj7xjjwsdkmauenkmusm73zzr52c3h38shkjaw5g0f5az0eqk9s3vr": "@Manufacturer" }; 
+    for (let i = 0; i < Object.keys(arr).length; i++) {
+         if (adr == Object.keys(arr)[i])
+        test = Object.values(arr)[i]; 
+        if (adr == Object.values(arr)[i])
+        test = Object.keys(arr)[i]; 
+    }
+    return test; 
+}
+
+
+createTxTableAdd (add)
+{
+    const tableHeaders = ["From" , "To", "Tx", "Time ", "Metadata", "Details"];
+        let txBoardTable = document.createElement("table");
+       txBoardTable.id= "txBoardTable";
+        let txBoardTableHead = document.createElement("thead");
+        let txBoardTableHeaderRow = document.createElement("tr");
+
+        tableHeaders.forEach(header=>{
+        let scoreHeader = document.createElement('th');
+        scoreHeader.innerText= header; 
+        txBoardTableHeaderRow.append(scoreHeader);
+        })
+
+        txBoardTableHead.append(txBoardTableHeaderRow);
+        txBoardTable.append(txBoardTableHead);
+
+        let txTableBody = document.createElement("tbody");
+      txBoardTable.append(txTableBody);
+
+    let listTx =[]
+    
+    let listTxAd = add;
+    listTxAd.forEach(ct => {
+        listTx.push(this.returnTxDetails(ct))
+      }) 
+
+       listTx.forEach((tx,index) => {
+try{
+    let txBoardBodyRaw = document.createElement('tr'); 
+     let infoTx = this.returnIO(listTxAd[index]);
+     let FromAddress = document.createElement('td')
+      FromAddress.innerText = this.stakeAddressMatch(this.returnStake(infoTx[0])) ;
+      let ToAddress = document.createElement('td')
+      ToAddress.innerText = this.stakeAddressMatch(this.returnStake(infoTx[1])) ; 
+      let Trax = document.createElement('td')
+      let a = document.createElement("a")
+      a.innerText =listTxAd[index];
+      a.target="_blank"
+      a.href= "https://cardanoscan.io/transaction/"+listTxAd[index]
+      Trax.append(a); 
+      let Time = document.createElement('td')
+      Time.innerText = this.returnDateTx(tx); 
+      let Metadata = document.createElement('td');
+      Metadata.innerText = this.returnTxMetadata(listTxAd[index]); 
+      let Details = document.createElement('td');
+      Details.innerText = infoTx[2]; 
+
+      txBoardBodyRaw.append(FromAddress,ToAddress,Trax,Time,Metadata, Details);
+      txBoardTable.append(txBoardBodyRaw);
+}
+catch{alert('error Table creation')};
+
+      }) 
+      return txBoardTable;
+
+}
+
+loadTx = async () => 
+{
+    let listTxAd = []
+    const txBoard = document.getElementById("txBoard");
+     const listAddress = this.returnAddress(this.state.rewardAddress); //Take the list of transaction on the account
+
+  listAddress.forEach(add  => {
+
+          listTxAd= listTxAd.concat(this.returnTxAddress(add));
+
+  })  
+
+  txBoard.append(this.createTxTableAdd(listTxAd))
+}
 
 
   testAlert = async () => 
@@ -1306,6 +1406,8 @@ addressMatch(adr)
 
   var arr1 = this.state.Utxos[1].multiAssetStr.split("+");
  var ap= [];
+ var policyname = []
+ var policy =[]
  var ar = arr1.filter(function(v, i) {
     // filter even number
     return i % 2 == 0;
@@ -1314,7 +1416,7 @@ addressMatch(adr)
     // filter even number
     return (i+1) % 2 == 0;
   });
-  alert(qt);
+  
   ar.shift();
   ar.forEach(element => {
      var b =[]
@@ -1322,6 +1424,8 @@ addressMatch(adr)
    var b1= b[1].split('.')
    // if (b1[0]=="47821765f6f7c97c6db9b16d4a7cf33d52738a3a66dbad87f398169b") check if a policy id is in the wallet 
    // alert('Find');
+   policy.push(b1[0]);
+   policyname.push(b[1]);
     ap.push(b1.join(""));
  }
  )
@@ -1374,87 +1478,36 @@ var info = document.createElement('p');
       if (qt[j]==1)
       listRawCert.appendChild(listCol);
       else
+      {
       listRawProd.appendChild(listCol);
+      let selectbox = document.getElementById("ProdName");
+      let opt = document.createElement("option")
+      opt.value = policyname[j];
+      opt.innerText = x.name;
+      selectbox.appendChild(opt);
+      }
+
 }
+    const txBoardProd = document.getElementById("txBoardProd");
 
-      
+ let listTxAd= this.returnTxAsset(ap[5]);
+txBoardProd.append(this.createTxTableAdd(listTxAd));
 
 
-    const txBoard = document.getElementById("txBoard");
+this.setState({
+    isDisabled: false
+  });
 
-    const tableHeaders = ["From" , "To", "Tx", "Time ", "Metadata", "Details"];
+var groups = document.getElementsByClassName("Group")
 
-    
-        while (txBoard.firstChild) txBoard.removeChild(txBoard.firstChild)
 
-        let txBoardTable = document.createElement("table");
-       txBoardTable.id= "txBoardTable";
-        let txBoardTableHead = document.createElement("thead");
-        let txBoardTableHeaderRow = document.createElement("tr");
-
-        tableHeaders.forEach(header=>{
-        let scoreHeader = document.createElement('th');
-        scoreHeader.innerText= header; 
-        txBoardTableHeaderRow.append(scoreHeader);
-        })
-
-        txBoardTableHead.append(txBoardTableHeaderRow);
-        txBoardTable.append(txBoardTableHead);
-
-        let txTableBody = document.createElement("tbody");
-      txBoardTable.append(txTableBody);
-
-      txBoard.append(txBoardTable);
-
-  
- const listAddress = this.returnAddress(this.state.rewardAddress.toString()); //Take the list of transaction on the account
-
- /* listAddress.forEach(add  => {
-
-         let listTx =[]
-    
-       let listTxAd= this.returnTxAddress(add)
-        listTxAd.forEach(ct => {
-          listTx.push(this.returnTxDetails(ct))
-        }) */
-
-        let listTx =[]
-    
-       let listTxAd= this.returnTxAsset(ap[5]);
-       listTxAd.forEach(ct => {
-         listTx.push(this.returnTxDetails(ct))
-       }) 
-
-        listTx.forEach((tx,index) => {
- try{
-      let txBoardBodyRaw = document.createElement('tr'); 
-      let infoTx = this.returnIO(listTxAd[index]);
-      let FromAddress = document.createElement('td')
-       FromAddress.innerText = this.addressMatch(this.returnStake(infoTx[0])) ;
-       let ToAddress = document.createElement('td')
-       ToAddress.innerText = this.addressMatch(this.returnStake(infoTx[1])) ; 
-       let Trax = document.createElement('td')
-       let a = document.createElement("a")
-       a.innerText =listTxAd[index];
-       a.target="_blank"
-       a.href= "https://cardanoscan.io/transaction/"+listTxAd[index]
-       Trax.append(a); 
-       let Time = document.createElement('td')
-       Time.innerText = this.returnDateTx(tx); 
-       let Metadata = document.createElement('td');
-       Metadata.innerText = this.returnTxMetadata(listTxAd[index]); 
-       let Details = document.createElement('td');
-       Details.innerText = infoTx[2]; 
-
-       txBoardBodyRaw.append(FromAddress,ToAddress,Trax,Time,Metadata, Details);
-       txBoardTable.append(txBoardBodyRaw);
- }
- catch{alert('error')};
-       }) 
-
-   //  }) 
-    
-
+for (let i = 0; i < groups.length; i++) {
+    if (policy.includes(groups[i].value))
+    {
+    groups[i].disabled=false; 
+    groups[i].innerText="Group"+i;
+    }
+}
 
 
  }
@@ -1472,7 +1525,7 @@ var info = document.createElement('p');
                
                
 
-                <Tabs id="TabsExample" vertical={true} onChange={this.handleTabId} selectedTabId={this.state.selectedTabId}>
+                <Tabs id="TabsExample" ref={this.myRef} vertical={true} onChange={this.handleTabId} selectedTabId={this.state.selectedTabId}>
 
                 <Tab id="1" title="Setup" panel={
                         <div style={{marginLeft: "20px"}}>
@@ -1506,30 +1559,34 @@ var info = document.createElement('p');
                 <p><span style={{fontWeight: "bold"}}>Staking Address: </span>{this.state.rewardAddress}</p>
                 <p><span style={{fontWeight: "bold"}}>Used Address: </span>{this.state.usedAddress}</p>
                 <hr style={{marginTop: "40px", marginBottom: "40px"}}/>
+                <input id="handle" type="text" placeholder="your @handle"></input>
+
                         </div>
                     } />
 
-<Tab id="2" title="Certification and Deed" panel={
+<Tab id="2" title="Certification and Deed" disabled={this.state.isDisabled} panel={
                         <div style={{marginLeft: "20px"}}>
                 <p id="certificationSpace"></p>
              
                         </div>
                     } />
-<Tab id="3" title="Account transaction" panel={
+<Tab id="3" title="Account transaction" disabled={this.state.isDisabled} panel={
                         <div style={{marginLeft: "20px"}}>
+                                            <button style={{padding: "10px"}} onClick={this.loadTx}>Load Transaction</button>
+
                 <div id="txBoard"> </div> 
              
                         </div>
                     } />
 
-<Tab id="4" title="Product transaction" panel={
+<Tab id="4" title="Product transaction" disabled={this.state.isDisabled} panel={
                         <div style={{marginLeft: "20px"}}>
-                <div id="txBoard"> </div> 
+                <div id="txBoardProd"> </div> 
              
                         </div>
                     } />
 
-<Tab id="5" title="Stock Management" panel={
+<Tab id="5" title="Stock Management" disabled={this.state.isDisabled} panel={
                         <div style={{marginLeft: "20px"}}>
                      <p id="prodSpace"></p>
              
@@ -1537,20 +1594,25 @@ var info = document.createElement('p');
                         </div>
                     } />
 
-<Tab id="6" title="Product transfer" panel={
+<Tab id="6" title="Product transfer" disabled={this.state.isDisabled} panel={
                        <div style={{marginLeft: "20px"}}>
-
+                     <FormGroup
+                           helperText="insert an address where you want to send some Asset ..."
+                           label="Address where to send Asset"
+                       >
+                   <select id="ProdName"> 
+ 
+</select>
+</FormGroup>
                        <FormGroup
                            helperText="insert an address where you want to send some Asset ..."
                            label="Address where to send Asset"
                        >
-                           <InputGroup
-                               disabled={false}
-                               leftIcon="id-number"
-                               onChange={(event) => this.setState({addressBech32SendADA: event.target.value})}
-                               value={this.state.addressBech32SendADA}
-
-                           />
+                          <input id="sendAddress" type="text" list="handleList" />
+<datalist id="handleList">
+  <option>@Manufacturer</option>
+  <option>@Fund</option>
+</datalist>
                        </FormGroup>
                        <FormGroup
                            helperText="Make sure you have enough of Asset in your wallet ..."
@@ -1598,13 +1660,7 @@ var info = document.createElement('p');
                            helperText="Metadata"
                            label="Metadata"
                        >
-                           <InputGroup
-                               disabled={false}
-                               leftIcon="id-number"
-                               onChange={(event) => this.setState({metadataHex: event.target.value})}
-                               value={this.state.metadataHex}
-
-                           />
+                          <input id="metadata" type="text" placeholder="Please enter data : url and/or hash of file"/>
                        </FormGroup>
 
                        <button style={{padding: "10px"}} onClick={this.buildSendTokenTransaction}>Run</button>
@@ -1613,7 +1669,7 @@ var info = document.createElement('p');
 
 
 
-                  <Tab id="7" title="Transfer" panel={
+                  <Tab id="7" title="Transfer" disabled={this.state.isDisabled} panel={
                           <div style={{marginLeft: "20px"}}>
 
                           <FormGroup
@@ -1652,13 +1708,13 @@ var info = document.createElement('p');
 
 <Tab id="8" title="Group" panel={
                           <div style={{marginLeft: "20px"}}>
-                            <ul class="pizza-toppings">
-                            <li class="meat">Group_one</li>
-                              <li class="meat">Group_one</li>
-                              <li class="vegetarian">Group_one</li>
-                              <li class="vegetarian vegan">Group_one</li>
-                                 <li class="vegetarian vegan">Group_one</li>
-                              </ul>
+
+                                   <button className="Group" type="button" value="test" onclick="" >Group1</button>This group is open<br></br>
+                                   <button className="Group"  type="button" value="a998bf1a844e0ae95f7a6a2ad749ddc3c9eb1362c154c31bb8fbf4ac" onclick="" disabled>no access </button>This group is permissioned by a Token Policy<br></br>
+                                   <button className="Group"  type="button" value="422727c3e6718a6d0d0208cf063512b2c1e846cd38bad498d45cbe76" onclick="" disabled>no access</button>This group is permissioned
+
+
+            
 
                      
                       </div>
