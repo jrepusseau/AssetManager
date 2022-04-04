@@ -1709,7 +1709,7 @@ for (let i = 0; i < groups.length; i++) {
 <Tab id="8" title="Group" panel={
                           <div style={{marginLeft: "20px"}}>
 
-                                   <button className="Group" type="button" value="test" onclick="" >Group1</button>This group is open<br></br>
+                                   <button className="Group" type="button" value="test" onclick="" >Group1</button>This group is  open<br></br>
                                    <button className="Group"  type="button" value="a998bf1a844e0ae95f7a6a2ad749ddc3c9eb1362c154c31bb8fbf4ac" onclick="" disabled>no access </button>This group is permissioned by a Token Policy<br></br>
                                    <button className="Group"  type="button" value="422727c3e6718a6d0d0208cf063512b2c1e846cd38bad498d45cbe76" onclick="" disabled>no access</button>This group is permissioned
 
